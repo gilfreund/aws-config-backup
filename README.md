@@ -4,6 +4,7 @@ The scripts in this repository are used to backup AWS configuration items. The b
 
 # Configuration
 General configuration is in the [backup.rc](backup.rc). Normally there is no need to chenge it. Site specific configution can be set in the [backup.user.rc] file. Those will include the prefered backup storage (GIT, FS or S3), the working direcroty (where the files will be stored for GIT or FS or the bucket name  for S3 backups)
+
 ## Parameters
 | Variable | Value | Meaning |
 |----------|-----------------------|----------------------------------------------|
@@ -14,10 +15,10 @@ General configuration is in the [backup.rc](backup.rc). Normally there is no nee
 
 # Requirments
 ## Permission
-List and read: Launch Templates, IAM Roles and Policies
-List, Read and Write: S3 Bucket (if used as a backend)
+* List and read: Launch Templates, IAM Roles and Policies
+* List, Read and Write: S3 Bucket (if used as a backend)
 ## OS Packages
-awscli (or aws-cli or install via pip)
-gawk
-coreutils (mkdir, date, mktemp, and cut)
-git (if using git as a backend)
+* awscli (or aws-cli or install via pip)
+* gawk
+* coreutils (mkdir, date, mktemp, and cut)
+* git (if using git as a backend)
