@@ -19,18 +19,17 @@ if [[ -z $TARGET ]] ; then
         TARGET="FS"
 fi
 
-# User/site specific variables, such as TARGET, WORKDIR and BUCKET can be set in the backup.user.rc file
+# User/site specific variables, such as TARGET and  WORKDIR can be set in the backup.user.rc file
 RCUSERFILE="$(dirname $(readlink -f $0))/backup.user.rc"
 if [[ -f $RCUSERFILE ]] ; then
 	source $RCUSERFILE
 fi
 
-# The workdir is the base location to which the backup will take place. Tou can change the setting the values for the FS and GIT targets at the command line or in backup.user.rc file. 
+# The workdir is the base location to which the backup will take place. You can change the setting the values for the FS and GIT targets at the command line or in backup.user.rc file. 
 # for 	location
 # FS	The file system to which the backup will be stored
 # GIT	A git controlled directory
 # S3	A temporaty directory
-#	S3 will also require a BUCKET variable to which the file will be uploaded
 case $TARGET in
         GIT|FS)
 		if [[ -z $WORKDIR ]] ; then
@@ -38,9 +37,9 @@ case $TARGET in
 		fi
 		;;
         S3)
-                WORKDIR=$(mktemp --directory)
-		if [[ -z $BUCKET ]] ; then
-			echo "The BUCKET variable, required for S3 backup is not configured"
+		export TEMPDIR=$(mktemp --directory)
+		if [[ -z $WORKDIR ]] ; then
+			echo "The WORKDIR variable, required for S3 backup is not configured"
 			echo "You will need to set it on the command line or in $RCUSERFILE"
 			exit 1
 		fi
@@ -61,8 +60,8 @@ function commit {
 			cd -
 			;;
 		S3)
-			$AWSCMD s3 sync --no-progress --size-only --sse --storage-class STANDARD_IA $WORKDIR $BUCKET/$1
-			rm -rvf $WORKDIR
+			$AWSCMD s3 sync --no-progress --size-only --sse --storage-class STANDARD_IA $TEMPDIR $WORKDIR/$1
+			rm -rvf $TEMPDIR
 		       	;;
 	       	*)
 		       	# not required in other cases
@@ -71,9 +70,22 @@ function commit {
 }
 
 function mksubdir {
-local SUBDIR="${WORKDIR}/$1"
-if [[ ! -d ${SUBDIR} ]]; then 
-	mkdir -p ${SUBDIR}
-fi
-echo $SUBDIR
+	case $TARGET in 
+		GIT|FS)
+			local SUBDIR="${WORKDIR}/$1"
+			;;
+		S3)
+			local SUBDIR="${TEMPDIR}/$1"
+			;;
+		*)
+			echo "TARGET not recognized, aborting..."
+			exit 1
+			;;
+	esac
+	
+	if [[ ! -d ${SUBDIR} ]]; then 
+		mkdir -p ${SUBDIR}
+	fi
+
+	echo $SUBDIR
 }
