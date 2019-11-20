@@ -1,0 +1,2 @@
+TARGET=S3
+BUCKET=s3://emendobio-devops/backups

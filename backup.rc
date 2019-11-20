@@ -1,0 +1,71 @@
+# vim:ft=sh
+# ec2rc
+
+if [[ -f ~/.aws/config ]] ; then
+	export AWSCMD="aws --output text"
+	export AWSGET="aws --output json"
+else
+	export REGION=$(curl --silent http://169.254.169.254/latest/meta-data/placement/availability-zone | cut -c1-9)
+	export AWSCMD="aws --region $REGION --output text"
+	export AWSGET="aws --region $REGION --output json"
+fi
+
+# The folowing can be overwridden by setting the values at the command line or in backup.user.rc file:
+# variable	value	desctiptio
+# TARGET	FS	Backup to a file system
+#		GIT	Backup to a git repository
+#		S3	Backup to an S3 bucket
+if [[ -z $TARGET ]] ; then
+        TARGET="FS"
+fi
+
+# User/site specific variables, such as TARGET, WORKDIR and BUCKET can be set in the backup.user.rc file
+RCUSERFILE="$(dirname $(readlink -f $0))/backup.user.rc"
+if [[ -f $RCUSERFILE ]] ; then
+	source $RCUSERFILE
+fi
+
+# The workdir is the base location to which the backup will take place. Tou can change the setting the values for the FS and GIT targets at the command line or in backup.user.rc file. 
+# for 	location
+# FS	The file system to which the backup will be stored
+# GIT	A git controlled directory
+# S3	A temporaty directory
+#	S3 will also require a BUCKET variable to which the file will be uploaded
+case $TARGET in
+        GIT|FS)
+		if [[ -z $WORKDIR ]] ; then
+			WORKDIR="$(pwd)"
+		fi
+		;;
+        S3)
+                WORKDIR=$(mktemp --directory)
+		if [[ -z $BUCKET ]] ; then
+			echo "The BUCKET variable, required for S3 backup is not configured"
+			echo "You will need to set it on the command line or in $RCUSERFILE"
+			exit 1
+		fi
+                ;;
+	*)
+                echo "Unknown TARGET defined $TARGET"
+		echo "Should be GIT, FS or S3"
+                exit 1
+                ;;
+esac
+
+function commit {
+        case $TARGET in
+                GIT)
+                        cd $WORKDIR
+			git add *
+                        git commit * --message="%1 %2 Backup from $(date +%Y-%m-%d_%T)"
+			cd -
+			;;
+		S3)
+			$AWSCMD s3 sync --storage-class STANDARD_IA $WORKDIR $BUCKET/$1
+			rm -rvf $WORKDIR
+		       	;;
+	       	*)
+		       	# not required in other cases
+			;;
+       	esac
+}
