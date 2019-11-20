@@ -57,7 +57,7 @@ function commit {
                 GIT)
                         cd $WORKDIR
 			git add *
-                        git commit * --message="%1 %2 Backup from $(date +%Y-%m-%d_%T)"
+                        git commit * --message="$* Backup from $(date +%Y-%m-%d_%T)"
 			cd -
 			;;
 		S3)
@@ -68,4 +68,12 @@ function commit {
 		       	# not required in other cases
 			;;
        	esac
+}
+
+function mksubdir {
+local SUBDIR="${WORKDIR}/$1"
+if [[ ! -d ${SUBDIR} ]]; then 
+	mkdir -p ${SUBDIR}
+fi
+echo $SUBDIR
 }
