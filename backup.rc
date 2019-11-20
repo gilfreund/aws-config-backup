@@ -61,7 +61,7 @@ function commit {
 			cd -
 			;;
 		S3)
-			$AWSCMD s3 sync --storage-class STANDARD_IA $WORKDIR $BUCKET/$1
+			$AWSCMD s3 sync --no-progress --size-only --sse --storage-class STANDARD_IA $WORKDIR $BUCKET/$1
 			rm -rvf $WORKDIR
 		       	;;
 	       	*)
