@@ -60,7 +60,7 @@ function commit {
 			cd -
 			;;
 		S3)
-			$AWSCMD s3 sync --no-progress --size-only --sse --storage-class STANDARD_IA $TEMPDIR $WORKDIR/$1
+			$AWSCMD s3 sync --no-progress --size-only --sse --storage-class INTELLIGENT_TIERING $TEMPDIR $WORKDIR/$1
 			rm -rvf $TEMPDIR
 		       	;;
 	       	*)
