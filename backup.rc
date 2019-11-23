@@ -15,6 +15,7 @@ fi
 # TARGET	FS	Backup to a file system
 #		GIT	Backup to a git repository
 #		S3	Backup to an S3 bucket
+# if not value is provided in backup.user.rc, default to FS
 if [[ -z $TARGET ]] ; then
         TARGET="FS"
 fi
@@ -60,8 +61,8 @@ function commit {
 			cd -
 			;;
 		S3)
-			$AWSCMD s3 sync --no-progress --size-only --sse --storage-class INTELLIGENT_TIERING $TEMPDIR $WORKDIR/$1
-			rm -rvf $TEMPDIR
+			$AWSCMD s3 sync --quiet --no-progress --size-only --sse --storage-class INTELLIGENT_TIERING $TEMPDIR $WORKDIR/$1
+			rm -rf $TEMPDIR
 		       	;;
 	       	*)
 		       	# not required in other cases
