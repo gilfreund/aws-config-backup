@@ -12,7 +12,7 @@ $AWSGET ec2 describe-launch-templates --launch-template-names $LaunchTemplateNam
 	if [[ $LaunchTemplateName != *Batch-Lt* ]] ; then
 		StartVersionNumber=1
 		for (( VersionNumber=$StartVersionNumber; VersionNumber<=$LatestVersionNumber; VersionNumber++ )) ; do
-			if [[ ! -f ${WORKDIR}/templates/${LaunchTemplateName}-${VersionNumber}.json ]] ; then
+			if [[ ! -f ${SUBDIR}/templates/${LaunchTemplateName}-${VersionNumber}.json ]] ; then
 				$AWSGET ec2 describe-launch-template-versions --launch-template-name $LaunchTemplateName --versions $VersionNumber > ${SUBDIR}/${LaunchTemplateName}-${VersionNumber}.json
 			fi
 		done
