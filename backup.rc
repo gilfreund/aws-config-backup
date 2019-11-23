@@ -1,24 +1,21 @@
 # vim:ft=sh
 # ec2rc
 
-if [[ -f ~/.aws/config ]] ; then
-	export AWSCMD="aws --output text"
-	export AWSGET="aws --output json"
-else
-	export REGION=$(curl --silent http://169.254.169.254/latest/meta-data/placement/availability-zone | cut -c1-9)
-	export AWSCMD="aws --region $REGION --output text"
-	export AWSGET="aws --region $REGION --output json"
-fi
 
-# The folowing can be overwridden by setting the values at the command line or in backup.user.rc file:
-# variable	value	desctiptio
-# TARGET	FS	Backup to a file system
-#		GIT	Backup to a git repository
-#		S3	Backup to an S3 bucket
-# if not value is provided in backup.user.rc, default to FS
-if [[ -z $TARGET ]] ; then
-        TARGET="FS"
+# Check if region information is available for aws commands
+if [[ ! -f ~/.aws/config ]] ; then
+	export REGION=$(curl --silent http://169.254.169.254/latest/meta-data/placement/availability-zone | cut -c1-9)
+	if [[ -z $REGION ]] ; then
+		echo "Cannot detect region. If using a not running inside an amazon environment,"
+		echo "use aws configure to set it"
+		exit 1
+	else
+		AWSREGION="--region $REGION"
+	fi
 fi
+echo "Configuring AWS CLI"
+export AWSCMD="aws --region $REGION --output text"
+export AWSGET="aws --region $REGION --output json"
 
 # User/site specific variables, such as TARGET and  WORKDIR can be set in the backup.user.rc file
 RCUSERFILE="$(dirname $(readlink -f $0))/backup.user.rc"
@@ -26,6 +23,44 @@ if [[ -f $RCUSERFILE ]] ; then
 	source $RCUSERFILE
 fi
 
+# The folowing can be overwridden by setting the values at the command line or in backup.user.rc file:
+# variable	value	desctiptio
+# TARGET	FS	Backup to a file system
+#		GIT	Backup to a git repository
+#		S3	Backup to an S3 bucket
+# if no value is provided for TARGET in backup.user.rc, default to FS
+if [[ -z $TARGET ]] ; then
+        TARGET="FS"
+fi
+
+echo "TARGET is $TARGET"
+
+if [[ -n $CONDA_ENV ]] ; then
+	if [[ -n $CONDA_EXE ]] ; then
+		$CONDA_EXE $CONDA_ENV
+	else
+		if [[ -f ${CONDA_ROOT}/bin/activate && -d ${CONDA_ROOT}/envs/${CONDA_ENV} ]] ; then 
+			source $CONDA_ROOT/bin/activate $CONDA_ENV
+			echo "Using conda environment $CONDA_ENV"
+		else
+			echo "Cannot activate environemt CONDA_ENV=${CONDA_ENV} in CONDA_ROOT=${CONDA_ROOT}"
+			echo "the following command failed:"
+			echo "source $CONDA_ROOT/bin/activate $CONDA_ENV"
+		fi
+	fi
+fi
+
+echo "Validate pre-requisites"
+for COMMAND_CHECK in (cut awk aws git) ; do
+	if [[ "$TARGET" == "GIT" && "$COMMAND_CHECK" == "git" ]] ; then
+		if [[ -z $COMMAND_CHECK ]] ; then
+			echo "$COMMAND_CHECK was not found, check path or install"
+			exit 1
+		else
+			echo "$COMMAND_CHECK found"
+		fi
+	fi
+done
 # The workdir is the base location to which the backup will take place. You can change the setting the values for the FS and GIT targets at the command line or in backup.user.rc file. 
 # for 	location
 # FS	The file system to which the backup will be stored
@@ -51,6 +86,7 @@ case $TARGET in
                 exit 1
                 ;;
 esac
+echo "Backing up to $WORKDIR"
 
 function commit {
         case $TARGET in
