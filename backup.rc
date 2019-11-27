@@ -7,26 +7,22 @@ function checkCommand {
 		if [[ -z $COMMAND_CHECK ]] ; then
 			echo "$COMMAND_NAME was not found, check path or install"
 			exit 1
-		else
-			echo "$COMMAND_NAME found: (${COMMAND_CHECK})"
 		fi
 	done
 }
 
 # Check if region information is available for aws commands
-echo "Initial checkes" 
 checkCommand aws curl cut awk cat
 if [[ ! -f ~/.aws/config ]] ; then
 	export REGION=$(curl --silent http://169.254.169.254/latest/meta-data/placement/availability-zone | cut -c1-9)
 	if [[ -z $REGION ]] ; then
-		echo "Cannot detect region. If using a not running inside an amazon environment,"
+		echo "Cannot detect region. If not running inside an amazon environment,"
 		echo "use aws configure to set it"
 		exit 1
 	else
 		AWSREGION="$AWSREGION"
 	fi
 fi
-echo "Configuring AWS CLI"
 export AWSCMD="aws $AWSREGION --output text"
 export AWSGET="aws $AWSREGION --output json"
 
@@ -97,10 +93,6 @@ case $TARGET_TYPE in
                 exit 1
                 ;;
 esac
-echo "Backing up to $TARGET_LOCATION"
-if [[ "$TARGET_TYPE" == "S3" ]] ; then
-	echo "via ${TEMPDIR}"
-fi
 
 function commit {
         case $TARGET_TYPE in
