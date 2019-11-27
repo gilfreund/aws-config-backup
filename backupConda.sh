@@ -1,8 +1,14 @@
-#!/usr/bin/env bash
+#!/bin/bash
 RCFILE="$(dirname $(readlink -f $0))/backup.rc"
-if [[ -f "$RCFILE" ]] ; then
-	        source "$RCFILE"
+if [[ -z $AWSCMD ]] ; then
+	if [[ -f "$RCFILE" ]] ; then
+		source "$RCFILE"
+	else
+		echo "Configuration file $RCFILE not found, exiting..."
+		exit 1
 fi
+
+echo "Backing up conda configurations"
 
 if [[ -z CONDA_ROOT ]] ; then
 	echo "CONDA_ROOT is not defined in backup.user.rc"

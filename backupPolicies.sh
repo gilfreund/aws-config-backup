@@ -1,8 +1,14 @@
 #!/bin/bash
 RCFILE="$(dirname $(readlink -f $0))/backup.rc"
-if [[ -f "$RCFILE" ]] ; then
-	        source "$RCFILE"
+if [[ -z $AWSCMD ]] ; then
+	if [[ -f "$RCFILE" ]] ; then
+		source "$RCFILE"
+	else
+		echo "Configuration file $RCFILE not found, exiting..."
+		exit 1
 fi
+
+echo "Backing up IAM Policies configurations"
 
 SUBDIR=$(mksubdir Policies)
 

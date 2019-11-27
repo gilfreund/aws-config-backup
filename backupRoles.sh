@@ -1,8 +1,14 @@
-#!/bin/bash -x
+#!/bin/bash
 RCFILE="$(dirname $(readlink -f $0))/backup.rc"
-if [[ -f "$RCFILE" ]] ; then
-	        source "$RCFILE"
+if [[ -z $AWSCMD ]] ; then
+	if [[ -f "$RCFILE" ]] ; then
+		source "$RCFILE"
+	else
+		echo "Configuration file $RCFILE not found, exiting..."
+		exit 1
 fi
+
+echo "Backing up IAM Roles configurations"
 
 SUBDIR=$(mksubdir roles)
 
@@ -26,4 +32,4 @@ $AWSCMD iam list-role-policies --role-name ${RoleName} | awk '{print $2}' | whil
 done
 done
 
-commit IAM Configurations
+commit IAM Role Configurations
