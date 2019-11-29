@@ -1,5 +1,4 @@
 .bashrc
 .swp
 backup.user.rc
-s3update.sh
 aws-config-backup.zip
