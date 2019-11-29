@@ -6,6 +6,7 @@ if [[ -z $AWSCMD ]] ; then
 	else
 		echo "Configuration file $RCFILE not found, exiting..."
 		exit 1
+	fi
 fi
 
 echo "Backing up IAM Policies configurations"
