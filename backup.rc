@@ -1,5 +1,5 @@
 # vim:ft=sh
-# ec2rc
+# backup.rc
 
 function checkCommand {
 	for COMMAND_NAME in $* ; do
@@ -28,13 +28,17 @@ export AWSGET="aws $AWSREGION --output json"
 
 # User/site specific variables, such as TARGET_TYPE and  TARGET_LOCATION can be set in the backup.user.rc file
 RCUSERFILE="$(dirname $(readlink -f $0))/backup.user.rc"
-if [[ -f $RCUSERFILE ]] ; then
-	source $RCUSERFILE
-	echo "Loaded ${RCUSERFILE}:"
-	echo "------------------------------------------------------------------------"
-	cat $RCUSERFILE
-	echo "------------------------------------------------------------------------"
-
+if [[ -z $TARGET_TYPE || -z $TARGET_LOCATION || -z $CONDA_ROOT || -z $CONDA_ENV || -z $SCRIPTS_BUCKET ]] ; then
+	if [[ -f $RCUSERFILE ]] ; then
+		source $RCUSERFILE
+		echo "Loaded ${RCUSERFILE}:"
+		echo "------------------------------------------------------------------------"
+		cat $RCUSERFILE
+		echo "------------------------------------------------------------------------"
+	else
+		echo "user rc file $RCUSERFILE not found, exiting...."
+		exit 1
+	fi
 fi
 
 # The folowing can be overwridden by setting the values at the command line or in backup.user.rc file:
@@ -95,6 +99,10 @@ case $TARGET_TYPE in
 esac
 
 function commit {
+	if [[ -z $TARGET_TYPE || -z $TARGET_LOCATION ]] ; then
+		source $RCUSERFILE
+	fi
+
         case $TARGET_TYPE in
                 GIT)
 			echo "Commiting to git with message:"
@@ -119,8 +127,12 @@ function commit {
 			;;
        	esac
 }
+export -f commit
 
 function mksubdir {
+	if [[ -z $TARGET_TYPE || -z $TARGET_LOCATION || -z $TEMPDIR ]] ; then
+		source $RCUSERFILE
+	fi
 	case $TARGET_TYPE in 
 		GIT|FS)
 			local SUBDIR="${TARGET_LOCATION}/$1"
@@ -141,3 +153,4 @@ function mksubdir {
 
 	echo $SUBDIR
 }
+export -f mksubdir

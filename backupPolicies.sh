@@ -1,6 +1,7 @@
 #!/bin/bash
 RCFILE="$(dirname $(readlink -f $0))/backup.rc"
-if [[ -z $AWSCMD ]] ; then
+
+if [[ -z $AWSCMD || -z $TARGET_TYPE || -z $TARGET_LOCATION || -z $TEMPDIR  ]] ; then
 	if [[ -f "$RCFILE" ]] ; then
 		source "$RCFILE"
 	else
