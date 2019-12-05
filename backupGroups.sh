@@ -14,15 +14,18 @@ echo "Backing up IAM Groups"
 
 SUBDIR=$(mksubdir Groups)
 
-$AWSCMD iam list-groups | awk {'print $5" "$6'} | while read -r GroupName Path ; do
-	if [[ ${#Path} -gt 1 ]] ; then
-		if [[ ! -d ${SUBDIR}${Path} ]] ; then
-			mkdir ${SUBDIR}${Path}
+function checkForValues {
+	local result=$($AWSCMD iam $1 --user-name $UserName | awk {'print $2'})
+	if [[ -n "${result}" ]] ; then
+		if [[ -n "${2}" ]] ; then 
+			$AWSGET iam $1 --user-name $UserName > ${TARGET_FILE}-$2.json
+		else
+			echo "true"
 		fi
-		TARGET_FILE="${SUBDIR}${Path}${GroupName}"
-	else
-		TARGET_FILE="${SUBDIR}/${GroupName}"
 	fi
+}
+
+$AWSCMD iam list-groups | awk {'print $5" "$6'} | while read -r GroupName Path ; do
 	$AWSGET iam get-group --group-name $GroupName > ${TARGET_FILE}.json
 	$AWSGET iam list-group-policies --group-name $GroupName > ${TARGET_FILE}-policies.json
 	$AWSCMD iam list-attached-group-policies --group-name $GroupName | awk {'print $4'} | while read -r PolicyNames ; do
