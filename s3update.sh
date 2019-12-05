@@ -11,7 +11,7 @@ if [[ -z $SCRIPTS_BUCKET ]] ; then
 	exit 1
 fi
 if [[ -f aws-config-backup.zip ]] ; then
-	zip -f aws-config-backup *.sh *.rc -x s3update.sh
+	zip -u aws-config-backup *.sh *.rc -x s3update.sh
 else
 	zip aws-config-backup *.sh *.rc -x s3update.sh
 fi
