@@ -154,3 +154,49 @@ function mksubdir {
 	echo $SUBDIR
 }
 export -f mksubdir
+
+function backupIfNotNull {
+	local sub_feature=$1
+	local target_file_suffix=$2
+	case $FEATURE in
+		lambda)
+			if [[ "$sub_feature" == "list-tags" ]] ; then 
+				feature_prefix="--resource"
+			else
+				feature_prefix="--function-name"
+			fi
+			;;
+		iam)
+			feature_prefix="--user-name"
+			;;
+		*)
+			echo "No feature identified, exiting.."
+			exit 1
+			;;
+	esac
+
+        local result=$($AWSCMD $FEATURE $sub_feature $feature_prefix $OBJECT_NAME | awk {'print $2'})
+        if [[ -n "${result}" ]] ; then
+                if [[ -n "${target_file_suffix}" ]] ; then
+                        $AWSGET $FEATURE $sub_feature $feature_prefix $OBJECT_NAME > ${TARGET_FILE}-$target_file_suffix.json
+                else
+                        echo "true"
+                fi
+        fi
+}
+export -f backupIfNotNull
+
+function buildTargetFilePrefix {
+	local Prefix=$1
+	local Path=$2
+        if [[ ${#Path} -gt 1 ]] ; then
+                if [[ ! -d ${SUBDIR}${Path} ]] ; then
+                        mkdir ${SUBDIR}${Path}
+                fi
+                local TARGET_FILE="${SUBDIR}${Path}${Prefix}"
+        else
+                local TARGET_FILE="${SUBDIR}/${Prefix}"
+        fi
+	echo $TARGET_FILE
+}
+export -f buildTargetFilePrefix
