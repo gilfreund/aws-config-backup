@@ -16,9 +16,9 @@ function nicedate {
 echo "Backing up Batch Jobs"
 
 SUBDIR=$(mksubdir jobs)
+TIMESTAMP=$(date '+%Y-%m-%d_%H-%M')
 
-
-echo "jobName,jobId,jobDefinition,status,jobQueue,image,vcpus,memory,exitCode,statusReason,created,waitTime,started,stopped,runTime" > ${SUBDIR}\$(date '+%Y-%m-%d_%H-%M').log
+echo "jobName,jobId,jobDefinition,status,jobQueue,image,vcpus,memory,exitCode,statusReason,created,waitTime,started,stopped,runTime" > ${SUBDIR}/$TIMESTAMP.log
 for status in SUBMITTED PENDING RUNNABLE STARTING SUCCEEDED FAILED
 do 
 	$AWSCMD batch list-jobs --job-queue General --job-status $status --query jobSummaryList[*].[jobName,jobId] | while IFS=$'\t' read -r jobName jobId ; do
@@ -37,7 +37,7 @@ do
 					runTime=$(date --universal --date=@$(( (stoppedAt - startedAt) / 1000 )) +"%T")
 				fi
 			fi
-			echo "\"$jobName\",$jobId,\"$jobDefinition\",$status,\"$jobQueue\",\"$image\",$vcpus,$memory,$exitCode,"$statusReason",$created,$waitTime,$started,$stopped,$runTime" | tee ${TARGET_FILE}_$status.txt -a ${SUBDIR}/$(date '+%Y-%m-%d_%H-%M').log
+			echo "\"$jobName\",$jobId,\"$jobDefinition\",$status,\"$jobQueue\",\"$image\",$vcpus,$memory,$exitCode,\"$statusReason\",$created,$waitTime,$started,$stopped,$runTime" | tee ${TARGET_FILE}_$status.txt -a ${SUBDIR}/$TIMESTAMP.log
 			$AWSCMD batch describe-jobs --jobs $jobId --query jobs[*].container.[logStreamName,taskArn,containerInstanceArn] | while IFS=$'\t' read -r logStreamName taskArn containerInstanceArn ; do
 				$AWSCMD logs get-log-events --log-group-name '/aws/batch/job' --log-stream-name $logStreamName --start-from-head --limit 10000 --query events[*].message > ${TARGET_FILE}.log
 			done

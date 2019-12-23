@@ -16,7 +16,7 @@ SUBDIR=$(mksubdir functions)
 FEATURE=lambda
 
 $AWSCMD lambda list-functions | awk -F '\t' '/FUNCTIONS/ {print $5" "$6}' | while read -r OBJECT_NAME functionName ; do 
-	TARGET_FILE=$(buildTargetFilePrefix $functionName)
+	TARGET_FILE=$(buildTargetFilePrefix $functionName $functionName)
 	$AWSGET lambda get-function --function-name $OBJECT_NAME > ${TARGET_FILE}.json
 	backupIfNotNull list-tags tags
 	if [[ "$(backupIfNotNull list-versions-by-function)" == "true" ]] ; then
