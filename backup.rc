@@ -189,11 +189,11 @@ export -f backupIfNotNull
 function buildTargetFilePrefix {
 	local Prefix=$1
 	local Path=$2
-        if [[ ${#Path} -gt 1 ]] ; then
-                if [[ ! -d ${SUBDIR}${Path} ]] ; then
-                        mkdir ${SUBDIR}${Path}
+        if [[ -n "${Path}"} ]] ; then
+                if [[ ! -d ${SUBDIR}/${Path} ]] ; then
+                        mkdir ${SUBDIR}/${Path}
                 fi
-                local TARGET_FILE="${SUBDIR}${Path}${Prefix}"
+                local TARGET_FILE="${SUBDIR}/${Path}/${Prefix}"
         else
                 local TARGET_FILE="${SUBDIR}/${Prefix}"
         fi

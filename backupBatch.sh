@@ -13,17 +13,17 @@ fi
 echo "Backing up Batch configurations"
 
 SUBDIR=$(mksubdir environments)
-$AWSCMD batch describe-compute-environments | grep COMPUTEENVIRONMENTS | awk '{ print $3 }' | while read -r Environment ; do 
+$AWSCMD batch describe-compute-environments --query computeEnvironments[*].computeEnvironmentName | while read -r Environment ; do 
 $AWSGET batch describe-compute-environments --compute-environments $Environment > ${SUBDIR}/${Environment}.json
 done
 
 SUBDIR=$(mksubdir definitions)
-$AWSCMD batch describe-job-definitions | grep JOBDEFINITIONS | awk '{print $2" "$3" "$4}' | while read -r arn name revision ; do
+$AWSCMD batch describe-job-definitions --query jobDefinitions[*].[jobDefinitionArn,jobDefinitionName,revision] | while read -r arn name revision ; do
 $AWSGET batch describe-job-definitions --job-definitions $arn > ${SUBDIR}/${name}-${revision}.json
 done
 
 SUBDIR=$(mksubdir queues)
-$AWSCMD batch describe-job-queues | grep JOBQUEUES | awk '{print $2" "$3}'| while read -r arn name ; do
+$AWSCMD batch describe-job-queues --query jobQueues[*].[jobQueueArn,jobQueueName] |  while read -r arn name ; do
 $AWSGET  batch describe-job-queues --job-queues ${arn} >  ${SUBDIR}/${name}.json 
 done
 

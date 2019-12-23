@@ -1,0 +1,14 @@
+Loaded /efs/home/ec2-user/dev/aws-config-backup/backup.user.rc:
+------------------------------------------------------------------------
+# vim:ft=sh
+# backup.user.rc
+
+export TARGET_TYPE="S3"
+export TARGET_LOCATION="s3://emendobio-devops/backups"
+export CONDA_ROOT="/efs/emendo/software/anaconda3"
+export CONDA_ENV=""
+export SCRIPTS_BUCKET="s3://emendobio-devops/scripts"
+------------------------------------------------------------------------
+Backing up Batch Jobs
+===
+loading to s3://emendobio-devops/backups/Batch
