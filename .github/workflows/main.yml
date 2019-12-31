@@ -1,2 +1,0 @@
-name: shellcheck
-  uses: ludeeus/action-shellcheck@0.1.0
