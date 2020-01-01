@@ -156,8 +156,9 @@ function mksubdir {
 export -f mksubdir
 
 function backupIfNotNull {
-	local sub_feature=$1
-	local target_file_suffix=$2
+	local feature=$1
+	local sub_feature=$2
+	local target_file_suffix=$3
 	case $FEATURE in
 		lambda)
 			if [[ "$sub_feature" == "list-tags" ]] ; then 

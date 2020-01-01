@@ -30,19 +30,16 @@ FEATURE=iam
 
 $AWSCMD iam list-users | awk  -F '\t' {'print $7" "$5'} | while read -r OBJECT_NAME Path ; do
 	if [[ ${#Path} -gt 1 ]] ; then
-		if [[ ! -d ${SUBDIR}${Path} ]] ; then
-			mkdir ${SUBDIR}${Path}
-		fi
-		TARGET_FILE="${SUBDIR}${Path}${OBJECT_NAME}"
+		buildTargetFilePrefix $OBJECT_NAME $Path
 	else
-		TARGET_FILE="${SUBDIR}/${OBJECT_NAME}"
+		buildTargetFilePrefix $OBJECT_NAME root
 	fi
 	
 	$AWSGET iam get-user --user-name $OBJECT_NAME > ${TARGET_FILE}.json
-	backupIfNotNull list-attached-user-policies attached-policies
-	backupIfNotNull list-groups-for-user groups
-	backupIfNotNull list-user-tags tags
-	backupIfNotNull list-mfa-devices mfa
+	backupIfNotNull $FEATURE list-attached-user-policies attached-policies
+	backupIfNotNull $FEATURE list-groups-for-user groups
+	backupIfNotNull $FEATURE list-user-tags tags
+	backupIfNotNull $FEATURE list-mfa-devices mfa
 	
 	$AWSCMD iam list-user-policies --user-name $OBJECT_NAME | awk {'print $2'} | while read -r PolicyNames ; do
 		if [[ -n "${PolicyNames}" ]] ; then
@@ -50,15 +47,15 @@ $AWSCMD iam list-users | awk  -F '\t' {'print $7" "$5'} | while read -r OBJECT_N
 		fi
 	done
 	
-	ACCESS_KEY_LIST=$(backupIfNotNull list-access-keys)
+	ACCESS_KEY_LIST=$(backupIfNotNull $FEATURE list-access-keys)
 	if [[ "$ACCESS_KEY_LIST" == true ]] ; then
-		backupIfNotNull list-access-keys keys
+		backupIfNotNull $FEATURE list-access-keys keys
 		$AWSCMD iam list-access-keys --user-name $OBJECT_NAME | awk -F '\t' {'print $2'} | while read -r AccessKeyId ; do
 			$AWSGET iam get-access-key-last-used --access-key-id $AccessKeyId > ${TARGET_FILE}-keys-$AccessKeyId.json
 		done
 	fi
 	
-	SSH_PUBLIC_KEYS=$(backupIfNotNull list-ssh-public-keys)
+	SSH_PUBLIC_KEYS=$(backupIfNotNull $FEATURE list-ssh-public-keys)
 	if [[ "${SSH_PUBLIC_KEYS}" == "true" ]] ; then
 		$AWSGET iam list-ssh-public-keys --user-name $OBJECT_NAME > ${TARGET_FILE}-ssh.json
 		$AWSCMD iam list-ssh-public-keys --user-name $OBJECT_NAME | awk -F '\t' {'print $2'} | while read SSHPublicKeyId ; do
