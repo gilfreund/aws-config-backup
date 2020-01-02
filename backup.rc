@@ -159,7 +159,7 @@ function backupIfNotNull {
 	local feature=$1
 	local sub_feature=$2
 	local target_file_suffix=$3
-	case $FEATURE in
+	case $feature in
 		lambda)
 			if [[ "$sub_feature" == "list-tags" ]] ; then 
 				feature_prefix="--resource"
