@@ -30,12 +30,14 @@ then
 	fi
 fi
 
-SUBDIR=$(mksubdir .)
 for env in $(conda env list | tail  --lines=+3 | awk '{print $1}')
 do 
+	SUBDIR=$(mksubdir $env)
 	echo Processing $env
-	echo -e "\tExport environenment"
-	conda env export --name $env > ${SUBDIR}/${env}.yaml
+	echo -e "\tExport full environenment"
+	conda env export --name $env > ${SUBDIR}/${env}-full.yaml
+	echo -e "\tExport short environenment"
+	conda env export --from-history --name $env > ${SUBDIR}/${env}.yaml
 	echo -e "\tExport specs"
 	conda list --explicit --name ${env} > ${SUBDIR}/${env}-dependencies.txt
 	HISTORY="${CONDA_ROOT}/envs/${env}/conda-meta/history"
