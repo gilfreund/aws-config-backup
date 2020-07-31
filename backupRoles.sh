@@ -25,7 +25,7 @@ function checkForValues {
 
 SUBDIR=$(mksubdir roles)
 
-$AWSCMD iam  list-roles | grep ROLES | grep -v aws-service-role | awk -F '\t' {'print $6" "$8'} | while read -r Path RoleName ; do
+$AWSCMD iam  list-roles --query Roles[*].[Path,RoleName] | while read -r Path RoleName ; do
 	if [[ ${#Path} -gt 1 ]] ; then
 		if [[ ! -d ${SUBDIR}${Path} ]] ; then
 			mkdir ${SUBDIR}${Path}
@@ -38,7 +38,7 @@ $AWSCMD iam  list-roles | grep ROLES | grep -v aws-service-role | awk -F '\t' {'
 	checkForValues list-attached-role-policies attached-policies
 	checkForValues list-instance-profiles-for-role instance-profiles
 	if [[ "$(checkForValues list-role-policies)" == "true" ]] ; then 
-		$AWSCMD iam list-role-policies --role-name ${RoleName} | awk -F '\t' '{print $2}' | while read -r PolicyNames ; do
+		$AWSCMD iam list-role-policies --role-name ${RoleName} --query PolicyNames[*] | while read -r PolicyNames ; do
 			$AWSGET iam get-role-policy --role-name ${RoleName} --policy-name ${PolicyNames} > ${TARGET_FILE}-role-policies.json
 		done
 	fi
