@@ -14,25 +14,17 @@ echo "Backing up IAM Groups"
 
 SUBDIR=$(mksubdir Groups)
 
-function checkForValues {
-	local result=$($AWSCMD iam $1 --user-name $UserName | awk {'print $2'})
-	if [[ -n "${result}" ]] ; then
-		if [[ -n "${2}" ]] ; then 
-			$AWSGET iam $1 --user-name $UserName > ${TARGET_FILE}-$2.json
-		else
-			echo "true"
-		fi
+$AWSCMD iam list-groups --query Groups[*].[GroupName,Path] | while read -r GroupName Path ; do
+	if [[ ! -d ${SUBDIR}/${GroupName} ]] ; then
+		mkdir -p ${SUBDIR}/${GroupName}
 	fi
-}
-
-$AWSCMD iam list-groups | awk {'print $5" "$6'} | while read -r GroupName Path ; do
-	$AWSGET iam get-group --group-name $GroupName > ${TARGET_FILE}.json
-	$AWSGET iam list-group-policies --group-name $GroupName > ${TARGET_FILE}-policies.json
-	$AWSCMD iam list-attached-group-policies --group-name $GroupName | awk {'print $4'} | while read -r PolicyNames ; do
+	$AWSGET iam get-group --group-name $GroupName > ${SUBDIR}/${GroupName}/${GroupName}.json
+	$AWSGET iam list-group-policies --group-name $GroupName > ${SUBDIR}/${GroupName}/${GroupName}-policies.json
+	$AWSCMD iam list-attached-group-policies --group-name $GroupName --query AttachedPolicies[*].[PolicyName] | while read -r PolicyNames ; do
 		if [[ -n $PolicyNames ]] ; then
-			$AWSGET iam get-group-policy --group-name $GroupName --policy-name $PolicyNames > ${TARGET_FILE}-attached-policies.json
+			$AWSGET iam get-group-policy --group-name $GroupName --policy-name $PolicyNames > ${SUBDIR}/${GroupName}/${GroupName}-attached-policies.json
 		fi
 	done
 done
-
+ls -la ${SUBDIR}
 commit IAM Groups

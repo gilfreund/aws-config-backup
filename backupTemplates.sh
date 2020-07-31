@@ -12,17 +12,20 @@ fi
 
 echo "Backing up EC2 configurations"
 
-TEMPLATES=$($AWSCMD ec2 describe-launch-templates | grep LAUNCHTEMPLATES | awk '{ print $5,$7 }')
 SUBDIR=$(mksubdir templates)
 
-$AWSCMD ec2 describe-launch-templates | grep LAUNCHTEMPLATES | awk '{ print $5,$7 }' | while read -r LatestVersionNumber LaunchTemplateName ; do
-$AWSGET ec2 describe-launch-templates --launch-template-names $LaunchTemplateName > ${SUBDIR}/${LaunchTemplateName}.json
-	# Ignore *Batch-Lt* templates, as they are created and removed by the batch system
-	if [[ $LaunchTemplateName != *Batch-Lt* ]] ; then
+$AWSCMD ec2 describe-launch-templates --query LaunchTemplates[*].[LatestVersionNumber,LaunchTemplateName]  | while read -r LatestVersionNumber LaunchTemplateName ; do
+	if [[ $LaunchTemplateName != *Batch-lt* ]] && [[ $LaunchTemplateName != *launch-template-* ]] ; then
+		if [[ ! -d ${SUBDIR}/${LaunchTemplateName} ]] ; then
+			mkdir -p ${SUBDIR}/${LaunchTemplateName}
+		fi
+		$AWSGET ec2 describe-launch-templates --launch-template-names $LaunchTemplateName > ${SUBDIR}/${LaunchTemplateName}/${LaunchTemplateName}.json
 		StartVersionNumber=1
 		for (( VersionNumber=$StartVersionNumber; VersionNumber<=$LatestVersionNumber; VersionNumber++ )) ; do
 			if [[ ! -f ${SUBDIR}/templates/${LaunchTemplateName}-${VersionNumber}.json ]] ; then
-				$AWSGET ec2 describe-launch-template-versions --launch-template-name $LaunchTemplateName --versions $VersionNumber > ${SUBDIR}/${LaunchTemplateName}-${VersionNumber}.json
+				$AWSGET ec2 describe-launch-template-versions --launch-template-name $LaunchTemplateName --versions $VersionNumber > ${SUBDIR}/${LaunchTemplateName}/${LaunchTemplateName}-${VersionNumber}.json
+				UserData=$($AWSCMD ec2 describe-launch-template-versions --launch-template-name $LaunchTemplateName --versions $VersionNumber --query LaunchTemplateVersions[*].[LaunchTemplateData.UserData])
+				echo $UserData | base64 -d > ${SUBDIR}/${LaunchTemplateName}/${LaunchTemplateName}-${VersionNumber}.mime
 			fi
 		done
 	fi
