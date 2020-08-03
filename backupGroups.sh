@@ -19,12 +19,14 @@ $AWSCMD iam list-groups --query Groups[*].[GroupName,Path] | while read -r Group
 		mkdir -p ${SUBDIR}/${GroupName}
 	fi
 	$AWSGET iam get-group --group-name $GroupName > ${SUBDIR}/${GroupName}/${GroupName}.json
-	$AWSGET iam list-group-policies --group-name $GroupName > ${SUBDIR}/${GroupName}/${GroupName}-policies.json
-	$AWSCMD iam list-attached-group-policies --group-name $GroupName --query AttachedPolicies[*].[PolicyName] | while read -r PolicyNames ; do
-		if [[ -n $PolicyNames ]] ; then
-			$AWSGET iam get-group-policy --group-name $GroupName --policy-name $PolicyNames > ${SUBDIR}/${GroupName}/${GroupName}-attached-policies.json
+	# Get Group policies
+	$AWSCMD iam list-group-policies --group-name $GroupName --query PolicyNames | while read -r PolicyNames ; do
+		PolicyDirectory="${SUBDIR}/${GroupName}/policies"
+		if [[ ! -d $PolicyDirectory ]] ; then 
+			mkdir -p $PolicyDirectory
 		fi
+		$AWSGET iam  get-group-policy --group-name $GroupName --policy-name $PolicyNames > ${PolicyDirectory}/${PolicyNames}.json
 	done
+	$AWSGET iam list-attached-group-policies --group-name $GroupName > ${SUBDIR}/${GroupName}/${GroupName}-attached-policies.json
 done
-ls -la ${SUBDIR}
 commit IAM Groups
