@@ -1,4 +1,6 @@
 # vim:ft=sh
+# shellcheck shell=bash
+# shellcheck disable=SC2086
 # backup.rc
 
 function checkCommand {
