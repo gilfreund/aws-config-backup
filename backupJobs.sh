@@ -37,7 +37,7 @@ do
 					runTime=$(date --universal --date=@$(( (stoppedAt - startedAt) / 1000 )) +"%T")
 				fi
 			fi
-			echo "\"$jobName\",$jobId,\"$jobDefinition\",$status,\"$jobQueue\",\"$image\",$vcpus,$memory,$exitCode,\"$statusReason\",$created,$waitTime,$started,$stopped,$runTime" | tee ${TARGET_FILE}_$status.txt -a ${SUBDIR}/$TIMESTAMP.log
+			echo "\"$jobName\",$jobId,\"$jobDefinition\",$status,\"$jobQueue\",\"$image\",$vcpus,$memory,$exitCode,\"$statusReason\",$created,$waitTime,$started,$stopped,$runTime" | tee ${TARGET_FILE}_$status.txt >> ${SUBDIR}/$TIMESTAMP.log
 			$AWSCMD batch describe-jobs --jobs $jobId --query jobs[*].container.[logStreamName,taskArn,containerInstanceArn] | while IFS=$'\t' read -r logStreamName taskArn containerInstanceArn ; do
 				$AWSCMD logs get-log-events --log-group-name '/aws/batch/job' --log-stream-name $logStreamName --start-from-head --limit 10000 --query events[*].message > ${TARGET_FILE}.log
 			done
