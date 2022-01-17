@@ -30,7 +30,7 @@ then
 	fi
 fi
 
-for env in $(conda env list | tail  --lines=+3 | awk '{print $1}')
+for env in $(conda env list | tail  --lines=+3 | grep -v "\\" awk '{print $1}')
 do 
 	SUBDIR=$(mksubdir $env)
 	echo Processing $env
