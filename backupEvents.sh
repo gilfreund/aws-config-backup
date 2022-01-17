@@ -13,9 +13,12 @@ fi
 echo "Backing up Events configurations"
 
 SUBDIR=$(mksubdir rules)
-$AWSCMD events list-rules | awk '{print $2}' | awk -F"/" '{print $2}' | while read -r name ; do
-$AWSGET events describe-rule --name $name > ${SUBDIR}/${name}.json
-$AWSGET events list-targets-by-rule --rule $name > ${SUBDIR}/${name}.targets.json
+$AWSCMD events list-rules  --query Rules[*].[Name] | while read -r name ; do
+	if [[ ! -d ${SUBDIR}/${name} ]] ; then
+		mkdir -p ${SUBDIR}/${name}
+	fi
+	$AWSGET events describe-rule --name $name > ${SUBDIR}/${name}/${name}.json
+	$AWSGET events list-targets-by-rule --rule $name > ${SUBDIR}/${name}/${name}.targets.json
 done
 
 commit Events Configurations

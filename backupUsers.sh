@@ -12,23 +12,12 @@ fi
 
 echo "Backing up IAM Users"
 
-function checkForValues {
-	local result=$($AWSCMD iam $1 --user-name $OBJECT_NAME | awk {'print $2'})
-	if [[ -n "${result}" ]] ; then
-		if [[ -n "${2}" ]] ; then 
-			$AWSGET iam $1 --user-name $OBJECT_NAME > ${TARGET_FILE}-$2.json
-		else
-			echo "true"
-		fi
-	fi
-}
-
 $AWSCMD iam generate-credential-report > /dev/null
 
 SUBDIR=$(mksubdir users)
 FEATURE=iam
 
-$AWSCMD iam list-users | awk  -F '\t' {'print $7" "$5'} | while read -r OBJECT_NAME Path ; do
+$AWSCMD iam list-users --query Users[*].[UserName,Path] | while read -r OBJECT_NAME Path ; do
 	if [[ ${#Path} -gt 1 ]] ; then
 		buildTargetFilePrefix $OBJECT_NAME $Path
 	else
@@ -41,7 +30,7 @@ $AWSCMD iam list-users | awk  -F '\t' {'print $7" "$5'} | while read -r OBJECT_N
 	backupIfNotNull $FEATURE list-user-tags tags
 	backupIfNotNull $FEATURE list-mfa-devices mfa
 	
-	$AWSCMD iam list-user-policies --user-name $OBJECT_NAME | awk {'print $2'} | while read -r PolicyNames ; do
+	$AWSCMD iam list-user-policies --user-name $OBJECT_NAME --query PolicyNames[*] | while read -r PolicyNames ; do
 		if [[ -n "${PolicyNames}" ]] ; then
 			$AWSGET iam get-user-policy --user-name $OBJECT_NAME --policy-name $PolicyNames > ${TARGET_FILE}-policies.json
 		fi
@@ -50,7 +39,7 @@ $AWSCMD iam list-users | awk  -F '\t' {'print $7" "$5'} | while read -r OBJECT_N
 	ACCESS_KEY_LIST=$(backupIfNotNull $FEATURE list-access-keys)
 	if [[ "$ACCESS_KEY_LIST" == true ]] ; then
 		backupIfNotNull $FEATURE list-access-keys keys
-		$AWSCMD iam list-access-keys --user-name $OBJECT_NAME | awk -F '\t' {'print $2'} | while read -r AccessKeyId ; do
+		$AWSCMD iam list-access-keys --user-name $OBJECT_NAME  --query AccessKeyMetadata[*].AccessKeyId | while read -r AccessKeyId ; do
 			$AWSGET iam get-access-key-last-used --access-key-id $AccessKeyId > ${TARGET_FILE}-keys-$AccessKeyId.json
 		done
 	fi
@@ -58,7 +47,7 @@ $AWSCMD iam list-users | awk  -F '\t' {'print $7" "$5'} | while read -r OBJECT_N
 	SSH_PUBLIC_KEYS=$(backupIfNotNull $FEATURE list-ssh-public-keys)
 	if [[ "${SSH_PUBLIC_KEYS}" == "true" ]] ; then
 		$AWSGET iam list-ssh-public-keys --user-name $OBJECT_NAME > ${TARGET_FILE}-ssh.json
-		$AWSCMD iam list-ssh-public-keys --user-name $OBJECT_NAME | awk -F '\t' {'print $2'} | while read SSHPublicKeyId ; do
+		$AWSCMD iam list-ssh-public-keys --user-name $OBJECT_NAME --query SSHPublicKeys[*].[SSHPublicKeyId] | while read SSHPublicKeyId ; do
 			$AWSGET iam get-ssh-public-key --user-name $OBJECT_NAME --ssh-public-key-id $SSHPublicKeyId --encoding PEM > ${TARGET_FILE}.pem
 			$AWSGET iam get-ssh-public-key --user-name $OBJECT_NAME --ssh-public-key-id $SSHPublicKeyId --encoding SSH > ${TARGET_FILE}.ssh
 		done
