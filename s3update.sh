@@ -11,8 +11,8 @@ if [[ -z $SCRIPTS_BUCKET ]] ; then
 	exit 1
 fi
 if [[ -f aws-config-backup.zip ]] ; then
-	zip -u aws-config-backup *.sh *.rc -x s3update.sh
+	zip -u aws-config-backup backup*.sh backup*.rc -x s3update.sh
 else
-	zip aws-config-backup *.sh *.rc -x s3update.sh
+	zip aws-config-backup backup*.sh backup*.rc -x s3update.sh
 fi
 $AWSCMD s3 sync $(dirname "$(realpath $0)") $SCRIPTS_BUCKET --exclude "*" --include "*.zip"
