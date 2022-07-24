@@ -57,22 +57,6 @@ fi
 if [[ "$TARGET_TYPE" == "GIT" ]] ; then
 	checkCommand git
 fi
-# Check for other commands
-
-if [[ -n $CONDA_ENV ]] ; then
-	if [[ -n $CONDA_EXE ]] ; then
-		$CONDA_EXE $CONDA_ENV
-	else
-		if [[ -f ${CONDA_ROOT}/bin/activate && -d ${CONDA_ROOT}/envs/${CONDA_ENV} ]] ; then 
-			source $CONDA_ROOT/bin/activate $CONDA_ENV
-			echo "Using conda environment $CONDA_ENV"
-		else
-			echo "Cannot activate environemt CONDA_ENV=${CONDA_ENV} in CONDA_ROOT=${CONDA_ROOT}"
-			echo "the following command failed:"
-			echo "source $CONDA_ROOT/bin/activate $CONDA_ENV"
-		fi
-	fi
-fi
 
 # The workdir is the base location to which the backup will take place. You can change the setting the values for the FS and GIT targets at the command line or in backup.user.rc file. 
 # for 	location

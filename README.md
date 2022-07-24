@@ -12,8 +12,6 @@ General configuration is in the [backup.rc](backup.rc). Normally there is no nee
 |  | GIT | Backup to a git manages directory and commit |
 |  | S3 | Backup to an S3 Bucket |
 | TARGET_LOCATION | file system or s3 uri | Location to which the files will be stored |
-| CONDA_ROOT | Root of the conda environment | Used to backup conda, of if conda is used to install [## OS Packages] |
-| CONDA_ENV | The conda environment to use | Required if conda is used to install [## OS Packages]. Requires *CONDA_ROOT* |
 
 # Requirments
 ## Permission
